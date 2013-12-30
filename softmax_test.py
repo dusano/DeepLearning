@@ -3,7 +3,7 @@ from numpy  import *
 from scipy import optimize
 
 from MNIST_images import loadMNISTImages, loadMNISTLabels
-from softmax import softmaxCost, softmaxPredict
+import softmax
 from compute_numerical_gradient import computeNumericalGradient
 
 
@@ -31,9 +31,9 @@ if DEBUG:
 thetaParam = 0.005 * random.normal(size=numClasses * inputSize)
 
 def softmaxCostCallback(x):
-	return softmaxCost(x, numClasses, inputSize, lambdaParam, inputData, labels) 
+	return softmax.cost(x, numClasses, inputSize, lambdaParam, inputData, labels) 
 
-(cost, grad) = softmaxCost(thetaParam, numClasses, inputSize, lambdaParam, inputData, labels)
+(cost, grad) = softmax.cost(thetaParam, numClasses, inputSize, lambdaParam, inputData, labels)
 
 if DEBUG:
 	numGrad = computeNumericalGradient(softmaxCostCallback, thetaParam)
@@ -61,7 +61,7 @@ labels = loadMNISTLabels('mnist/t10k-labels-idx1-ubyte')
 
 inputData = images
 
-pred = softmaxPredict(optTheta, inputData)
+pred = softmax.predict(optTheta, inputData)
 
 acc = mean(labels==pred)
 print('Accuracy: %0.3f%%\n' % (acc * 100))

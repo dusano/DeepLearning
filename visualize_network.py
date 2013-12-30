@@ -5,8 +5,6 @@ import scipy.misc
 def visualizeNetwork(A, filename):
 	"""This function visualizes filters in matrix A"""
 
-	print "displayNetwork"
-
 	# rescale
 	A = A - mean(A)
  
@@ -28,7 +26,7 @@ def visualizeNetwork(A, filename):
 	k = 0
 	for i in range(int(m)):
 		for j in range(int(n)):
-			if k > M: 
+			if k >= M: 
 				continue 
 			
 			clim = max(abs(A[:,k]))

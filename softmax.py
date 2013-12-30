@@ -3,7 +3,7 @@ from numpy  import *
 from scipy.sparse import *
 
 
-def softmaxCost(thetaParam, numClasses, inputSize, lambdaParam, data, labels):
+def cost(thetaParam, numClasses, inputSize, lambdaParam, data, labels):
 	"""Compute the cost and gradient for softmax regression.
 	
 	Keyword arguments:
@@ -36,7 +36,7 @@ def softmaxCost(thetaParam, numClasses, inputSize, lambdaParam, data, labels):
 	return (cost, squeeze(array(thetaGrad.ravel())))
 
 
-def softmaxPredict(thetaParam, data):
+def predict(thetaParam, data):
 	"""Compute pred using theta
 	
 	Keyword arguments:
