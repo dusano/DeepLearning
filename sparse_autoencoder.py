@@ -26,7 +26,7 @@ def feedForward(thetaParam, hiddenSize, visibleSize, data):
 	return sigmoid(data.dot(W1.T) + b1)
 
 
-def cost(thetaParam, visibleSize, hiddenSize, lambdaParam, sparsityParam, betaParam, data):
+def cost(thetaParam, visibleSize, hiddenSize, lambdaParam, sparsityParam, betaParam, data, corruptionLevel=0.0):
 	""" Compute the cost/optimization objective J_sparse(W,b) for the Sparse Autoencoder,
 	and the corresponding gradients W1grad, W2grad, b1grad, b2grad.
 	
@@ -37,7 +37,8 @@ def cost(thetaParam, visibleSize, hiddenSize, lambdaParam, sparsityParam, betaPa
 	lambdaParam -- weight decay parameter
 	sparsityParam -- the desired average activation for the hidden units
 	betaParam -- weight of sparsity penalty term
-	data -- a matrix containing the training data. So, data[i,:] is the i-th training example. 
+	data -- a matrix containing the training data. So, data[i,:] is the i-th training example.
+	corruptionLevel -- how much of the input will get corrupted (denoising autoencoder)
 	
 	"""
 
@@ -47,9 +48,15 @@ def cost(thetaParam, visibleSize, hiddenSize, lambdaParam, sparsityParam, betaPa
 	b2 = thetaParam[2*hiddenSize*visibleSize+hiddenSize:]
 	
 	m = data.shape[0]
+	
+	inputData = data
+	# Corrupt input data (so that denoising autoencoder can fix it)
+	if corruptionLevel > 0.0:
+		corruptionMatrix = random.binomial(1,1-corruptionLevel, size=inputData.shape)
+		inputData = inputData * corruptionMatrix
 
 	# Forward propagation
-	a2 = sigmoid(data.dot(W1.T) + b1)
+	a2 = sigmoid(inputData.dot(W1.T) + b1)
 	a3 = sigmoid(a2.dot(W2.T) + b2)
 		
 	# Back propagation
@@ -60,7 +67,7 @@ def cost(thetaParam, visibleSize, hiddenSize, lambdaParam, sparsityParam, betaPa
 	delta3 = -(data - a3) * (a3 * (1-a3))
 	delta2 = (delta3.dot(W2) + betaParam*sparsity_delta) * (a2 * (1-a2))
 
-	W1grad = (delta2.T.dot(data))/m + lambdaParam * W1
+	W1grad = (delta2.T.dot(inputData))/m + lambdaParam * W1
 	b1grad = sum(delta2, 0)/m
 	W2grad = (delta3.T.dot(a2))/m + lambdaParam * W2
 	b2grad = sum(delta3, 0)/m

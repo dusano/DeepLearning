@@ -85,7 +85,7 @@ def params2stack(params, netConfig):
 	return stack
 
 
-def cost(thetaParam, inputSize, hiddenSize, numClasses, netConfig, lambdaParam, data, labels):
+def cost(thetaParam, inputSize, hiddenSize, numClasses, netConfig, lambdaParam, data, labels, corruptionLevel=0.0):
 	"""Takes a trained softmaxTheta and a training data set with labels, and returns cost
 	and gradient using a stacked autoencoder model. Used for finetuning.
 	
@@ -98,6 +98,7 @@ def cost(thetaParam, inputSize, hiddenSize, numClasses, netConfig, lambdaParam, 
 	lambdaParam -- the weight regularization penalty
 	data -- our matrix containing the training data as columns.  So, data[i,:] is the i-th training example. 
 	labels -- a vector containing labels, where labels[i] is the label for the i-th training example
+	corruptionLevel -- how much of the input will get corrupted (denoising autoencoder)
 	
 	"""
 	
@@ -109,11 +110,19 @@ def cost(thetaParam, inputSize, hiddenSize, numClasses, netConfig, lambdaParam, 
 	groundTruth = array(csc_matrix( (ones(m),(labels,range(m))), shape=(numClasses,m) ).todense())
 
 	activation = data
+	
+	# Corrupt input data (so that denoising autoencoder can fix it)
+	if corruptionLevel > 0.0:
+		corruptionMatrix = random.binomial(1,1-corruptionLevel, size=activation.shape)
+		activation = activation * corruptionMatrix
+
+	# Forward propagation
 	activations = []
 	for layer in stack:
 		activations.append(activation)
 		activation = sparse_autoencoder.sigmoid(activation.dot(layer.W.T) + layer.b)
 
+	# Back propagation
 	M = softmaxTheta.dot(activation.T)
 	M = M - amax(M, 0)
 	h_data = exp(M)

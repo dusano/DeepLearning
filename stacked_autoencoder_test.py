@@ -11,7 +11,7 @@ import softmax
 import stacked_autoencoder
 
 
-results_dir = 'results/sae2/'
+results_dir = 'results/dae1/'
 
 inputSize = 28 * 28		# MNIST inputs are 28x28
 numClasses = 10			# MNIST dataset consists of 10 digits
@@ -20,7 +20,7 @@ hiddenSizeL2 = 200		# Layer 2 Hidden Size
 sparsityParam = 0.1		# desired average activation of the hidden units.
 lambdaParam = 3e-3		# weight decay parameter       
 betaParam = 3			# weight of sparsity penalty term       
-corruptionLevel = 0.3	# how much of the input to denoising autoencoder will get corrupted.
+corruptionLevel = 0.1	# how much of the input will get corrupted (denoising autoencoder)
 
 if not os.path.exists(results_dir):
 	os.makedirs(results_dir)
@@ -41,7 +41,7 @@ if os.path.exists(sae1OptThetaFilename):
 else:
 	def sparseAutoencoderCostCallbackL1(x):
 		return sparse_autoencoder.cost(x, inputSize, hiddenSizeL1, lambdaParam, sparsityParam,
-					betaParam, trainData)
+					betaParam, trainData, corruptionLevel)
 	
 	sae1Theta = sparse_autoencoder.initializeParameters(hiddenSizeL1, inputSize)
 	result = optimize.minimize(sparseAutoencoderCostCallbackL1, sae1Theta, method='L-BFGS-B', jac=True, options=options)
@@ -62,7 +62,7 @@ if os.path.exists(sae2OptThetaFilename):
 else:
 	def sparseAutoencoderCostCallbackL2(x):
 		return sparse_autoencoder.cost(x, hiddenSizeL1, hiddenSizeL2, lambdaParam, sparsityParam,
-					betaParam, sae1Features)
+					betaParam, sae1Features, corruptionLevel)
 	
 	sae2Theta = sparse_autoencoder.initializeParameters(hiddenSizeL2, hiddenSizeL1)
 	result = optimize.minimize(sparseAutoencoderCostCallbackL2, sae2Theta, method='L-BFGS-B', jac=True, options=options)
@@ -115,7 +115,7 @@ if os.path.exists(saeOptThetaFilename):
 else:
 	def stackedAutoencoderCostCallback(x):
 		return stacked_autoencoder.cost(x, inputSize, hiddenSizeL2, numClasses, netConfig,
-				lambdaParam, trainData, trainLabels)
+				lambdaParam, trainData, trainLabels, corruptionLevel)
 
 	result = optimize.minimize(stackedAutoencoderCostCallback, stackedAETheta, method='L-BFGS-B', jac=True, options=options)
 	
@@ -135,4 +135,4 @@ print('Before Fine-tuning Test Accuracy: %0.3f%%\n' % (acc_no_fine_tuning * 100)
 pred_fine_tuned = stacked_autoencoder.predict(stackedAEOptTheta, inputSize, hiddenSizeL2, numClasses, netConfig, testData)
 
 acc_fine_tuned = mean(testLabels==pred_fine_tuned)
-print('Adter Fine-tuning Test Accuracy: %0.3f%%\n' % (acc_fine_tuned * 100))
+print('After Fine-tuning Test Accuracy: %0.3f%%\n' % (acc_fine_tuned * 100))
