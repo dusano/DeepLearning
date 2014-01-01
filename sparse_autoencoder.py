@@ -1,6 +1,9 @@
 # Based on CS294A/CS294W Programming Assignment Starter Code
 from numpy  import *
 
+from compute_numerical_gradient import computeNumericalGradient
+from image_patches import getPatches
+
 
 def sigmoid(x):
 	return 1 / (1 + exp(-x))
@@ -94,3 +97,32 @@ def initializeParameters(hiddenSize, visibleSize):
 	theta = concatenate([W1.ravel(), W2.ravel(), b1.ravel(), b2.ravel()])
 	
 	return theta
+
+
+if __name__ == "__main__":
+	""" Check correctness of implemenation of sparse_autoencoder cost function
+	using gradient check
+	"""
+	patchSize=8
+	visibleSize = patchSize*patchSize		# number of input units 
+	hiddenSize = 25							# number of hidden units
+	sparsityParam = 0.01					# desired average activation of the hidden units.
+	lambdaParam = 0.0001					# weight decay parameter       
+	betaParam = 3							# weight of sparsity penalty term
+
+	patches = getPatches(numPatches=10, patchSize=patchSize)
+
+	# Obtain random parameters theta
+	thetaParam = initializeParameters(hiddenSize, visibleSize)
+	
+	def sparseAutoencoderCostCallback(x):
+		return cost(x, visibleSize, hiddenSize, lambdaParam, sparsityParam,
+					betaParam, patches) 
+	
+	(cost_value, grad) = sparseAutoencoderCostCallback(thetaParam)
+	
+	numgrad = computeNumericalGradient(sparseAutoencoderCostCallback, thetaParam);
+	diff = linalg.norm(numgrad-grad)/linalg.norm(numgrad+grad)
+	
+	print('%s' % diff)
+	print('Norm of the difference between numerical and analytical gradient (should be < 1e-9)\n\n')
