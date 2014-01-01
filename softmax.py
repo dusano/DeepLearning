@@ -2,6 +2,8 @@
 from numpy  import *
 from scipy.sparse import *
 
+from compute_numerical_gradient import computeNumericalGradient
+
 
 def cost(thetaParam, numClasses, inputSize, lambdaParam, data, labels):
 	"""Compute the cost and gradient for softmax regression.
@@ -46,3 +48,30 @@ def predict(thetaParam, data):
 	h_data = exp(thetaParam.dot(data.T))
 	h_data = h_data / sum(h_data, 0)
 	return argmax(h_data, axis=0)
+	
+
+if __name__ == "__main__":
+	""" Check correctness of implemenation of softmax cost function
+	using gradient check
+	"""
+	numClasses = 10			# Number of classes (MNIST images fall into 10 classes)
+	lambdaParam = 1e-4		# Weight decay parameter
+	inputSize = 8
+	inputData = random.normal(size=(100,inputSize))
+	labels = random.randint(10, size=100)
+
+	def softmaxCostCallback(x):
+		return cost(x, numClasses, inputSize, lambdaParam, inputData, labels) 
+	
+	# Randomly initialise theta
+	thetaParam = 0.005 * random.normal(size=numClasses * inputSize)
+
+	(cost_value, grad) = softmaxCostCallback(thetaParam)
+	
+	numGrad = computeNumericalGradient(softmaxCostCallback, thetaParam)
+	
+	# Compare numerically computed gradients with those computed analytically
+	diff = linalg.norm(numGrad-grad)/linalg.norm(numGrad+grad)
+	
+	print('%s' % diff)
+	print('Norm of the difference between numerical and analytical gradient (should be < 1e-7)\n\n')
